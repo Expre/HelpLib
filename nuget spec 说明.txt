@@ -1,7 +1,0 @@
-﻿下载nuget.exe放在项目所在文件夹下 
-生成打包配置文件：
-nuget spec
-打包：
-nuget pack HelpLib.csproj
-dotnet cli
-dotnet nuget push HelpLib.1.0.3.nupkg -k oy2etluhhl7je7csqzsamzrdxdhrs4auvcqvx7puwzwgo4 -s https://api.nuget.org/v3/index.json
