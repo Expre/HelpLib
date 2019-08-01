@@ -92,8 +92,15 @@ namespace System
         #region 常用数据检查
         public static bool IsMobile(string mobile)
         {
-            string patt = @"^13[0-9]{9}|15[012356789][0-9]{8}|18[0-9][0-9]{8}|14[57][0-9]{8}$|^17[0135678][0-9]{8}$";
-            return Regex.IsMatch(mobile, patt);
+            //string patt = @"^13[0-9]{9}|15[012356789][0-9]{8}|18[0-9][0-9]{8}|14[57][0-9]{8}$|^17[0135678][0-9]{8}$";
+            //return Regex.IsMatch(mobile, patt);
+            if (mobile.IsNullOrEmpty())
+                return false;
+            if (mobile.Length != 11)
+                return false;
+            if (!mobile.StartsWith('1'))
+                return false;
+            return true;
         }
         public static string GetIDNO(object val)
         {

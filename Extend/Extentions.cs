@@ -7,7 +7,6 @@ namespace System
 {
     public static partial class Extentions
     {
-        #region DataFormater
         public static bool IsNullOrEmpty<TSource>(this IEnumerable<TSource> source)
         {
             return DataFormater.IsNullOrEmpty(source);
@@ -32,7 +31,5 @@ namespace System
         {
             return DataFormater.IsEmpty(scoure);
         }
-
-        #endregion
     }
 }
