@@ -4,4 +4,4 @@ nuget spec
 打包：
 nuget pack HelpLib.csproj
 dotnet cli
-dotnet nuget push HelpLib.1.0.4.nupkg -k oy2etluhhl7je7csqzsamzrdxdhrs4auvcqvx7puwzwgo4 -s https://api.nuget.org/v3/index.json
+dotnet nuget push HelpLib.1.0.5.nupkg -k oy2a4gsngww4wbuagupaqqgper7znsiudosb5mo47wgcwe -s https://api.nuget.org/v3/index.json

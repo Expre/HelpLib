@@ -47,20 +47,20 @@ namespace System
         }
         public static TOut MapperTo(TIn obj)
         {
+            if (obj.IsNull())
+                return default;
             return _func(obj);
         }
         public static List<TOut> MapperTo(List<TIn> list)
         {
-            if (list != null && list.Count > 0)
+            if (list.IsNullOrEmpty())
+                return null;
+            List<TOut> temp = new List<TOut>();
+            list.ForEach(obj =>
             {
-                List<TOut> temp = new List<TOut>();
-                list.ForEach(x =>
-                {
-                    temp.Add(_func(x));
-                });
-                return temp;
-            }
-            return null;
+                temp.Add(_func(obj));
+            });
+            return temp;
         }
     }
 

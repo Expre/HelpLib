@@ -5,22 +5,28 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace System
+namespace HelpLib
 {
     public static partial class Extentions
     {
         public static string ToName(this Enum value)
         {
-            Type type = value.GetType();
-            string res = ((NameValueAttribute)type.GetField(value.ToString()).GetCustomAttributes(typeof(NameValueAttribute), false).FirstOrDefault()).Name;
-            return res;
+            Type enumType = value.GetType();
+            if (!Enum.IsDefined(enumType, value))
+                return string.Empty;
+            NameValueAttribute nameValueAttribute = enumType.GetField(value.ToString()).GetCustomAttribute<NameValueAttribute>();
+            return nameValueAttribute?.Name;
         }
         public static object ToValue(this Enum value)
         {
-            Type type = value.GetType();
-            object tempValue = ((NameValueAttribute)type.GetField(value.ToString()).GetCustomAttributes(typeof(NameValueAttribute), false).FirstOrDefault()).Value;
-            if (tempValue == null)
-                tempValue = type.GetField(value.ToString()).GetValue(value);
+            Type enumType = value.GetType();
+            if (!Enum.IsDefined(enumType, value))
+                return default;
+            NameValueAttribute nameValueAttribute = enumType.GetField(value.ToString()).GetCustomAttribute<NameValueAttribute>();
+            object tempValue = nameValueAttribute.Value;
+            if (tempValue != null)
+                return tempValue;
+            Enum.TryParse(enumType, value.ToString(), out tempValue);
             return tempValue;
         }
         public static List<NameValueInfo> GetNameValues<T>()

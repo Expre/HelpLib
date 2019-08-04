@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
-
+using HelpLib;
 namespace System
 {
     public class DataFormater
@@ -356,22 +356,6 @@ namespace System
             银行卡号 = 2,
         }
         #endregion
-        #region 流转字节数组、base64字符串
-        public static byte[] ToBytes(Stream scoureStream)
-        {
-            if (!scoureStream.CanRead)
-                return null;
-            scoureStream.Seek(0, SeekOrigin.Begin);
-            var buffer = new byte[scoureStream.Length];
-            scoureStream.Read(buffer, 0, buffer.Length);
-            return buffer;
-        }
-        public static string ToBase64(Stream scoureStream)
-        {
-            string base64 = Convert.ToBase64String(ToBytes(scoureStream));
-            return base64;
-        }
-        #endregion
         #region 对私有字段和属性值的设置及获取、私有方法的执行
         //1、得到私有字段的值
         public static T GetPrivateField<T>(object instance, string fieldname)
@@ -446,5 +430,17 @@ namespace System
             return str;
         }
         #endregion
+        public T GetValue<T>(object value)
+        {
+            try
+            {
+                T result = (T)Convert.ChangeType(value, typeof(T));
+                return result;
+            }
+            catch (Exception)
+            {
+                return default;
+            }
+        }
     }
 }

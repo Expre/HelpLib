@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace System
+namespace HelpLib.Crypto
 {
-    public class Hex
+    public class HexHelper
     {
-        //https://docs.microsoft.com/zh-cn/dotnet/csharp/programming-guide/types/how-to-convert-between-hexadecimal-strings-and-numeric-types
         public static byte[] HexStringToBytes(string hexValues)
         {
-            //string[] hexValuesSplit = hexValues.Split(' ');
             byte[] buff = new byte[hexValues.Length / 2];
             for (int i = 0; i < buff.Length; i++)
             {
@@ -19,9 +17,8 @@ namespace System
         }
         public static string BytesToHexString(byte[] input, bool isSpace = false)
         {
-            int i;
             StringBuilder str = new StringBuilder(input.Length);
-            for (i = 0; i < input.Length; i++)
+            for (int i = 0; i < input.Length; i++)
             {
                 str.Append(input[i].ToString("X2"));
                 if (isSpace)
@@ -34,7 +31,7 @@ namespace System
             int intSum = Convert.ToInt32(x, 16) + Convert.ToInt32(y, 16);
             return Convert.ToString(intSum, 16);
         }
-        public static string StringToHex(string str)
+        public static string GetHex(string str)
         {
             char[] values = str.ToCharArray();
             StringBuilder result = new StringBuilder();

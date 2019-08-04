@@ -2,13 +2,19 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
-    <RootNamespace>System</RootNamespace>
+    <RootNamespace>HelpLib</RootNamespace>
     <ApplicationIcon></ApplicationIcon>
     <OutputType>Exe</OutputType>
     <StartupObject />
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove=".gitattributes" />
+    <None Remove=".gitignore" />
+    <None Remove="HelpLib.1.0.0.nupkg" />
+    <None Remove="HelpLib.1.0.3.nupkg" />
+    <None Remove="HelpLib.1.0.4.nupkg" />
+    <None Remove="HelpLib.1.0.5.nupkg" />
     <None Remove="nuget.exe" />
   </ItemGroup>
 

@@ -4,209 +4,160 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Security;
 using System.Text;
 
-namespace System
+namespace HelpLib.WebRequest
 {
     public class HttpHelper
     {
-        private static readonly HttpClient httpClient;
+        private static readonly HttpClient _httpClient;
         static HttpHelper()
         {
-            TimeSpan timeSpan = new TimeSpan(0, 1, 0);
+            TimeSpan timeSpan = new TimeSpan(0, 3, 0);
             HttpClientHandler httpClientHandler = new HttpClientHandler { UseProxy = false };
-            httpClient = new HttpClient(httpClientHandler) { Timeout = timeSpan, };
+            _httpClient = new HttpClient(httpClientHandler) { Timeout = timeSpan, };
         }
-
-        #region Post文本
-        public static string Post(string url, string data, Dictionary<string, string> headers = null)
+        //ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback((sender, certifice, chain, sslerror) => true);
+        private static RemoteCertificateValidationCallback RemoteCertificateValidationCallback => (sender, certifice, chain, sslerror) => { return true; };
+        public static string Post(string url, string json, Dictionary<string, string> headers = null)
         {
-            //ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback((sender, certifice, chain, sslerror) => true);
-            try
-            {
-                if (string.IsNullOrEmpty(url))
-                    return null;
-                if (url.StartsWith("https"))
-                    ServicePointManager.ServerCertificateValidationCallback += (sender, certifice, chain, sslerror) => { return true; };
-                LogHelper.Write("url：\r" + url, "request");
-                //LogHelper.WriteLog("data：\r" + data, "request");
-                HttpWebRequest request = HttpWebRequest.Create(url) as HttpWebRequest;
-                request.Method = "Post";
-                request.ContentType = "application/json";
-                request.ProtocolVersion = HttpVersion.Version11;
-                request.Timeout = 3 * 60 * 1000;
-                request.CookieContainer = new CookieContainer();
-                if (headers != null)
-                {
-                    string value;
-                    foreach (string key in headers.Keys)
-                    {
-                        value = headers[key];
-                        switch (key.ToLower())
-                        {
-                            case "useragent":
-                                request.UserAgent = value;
-                                break;
-                            case "host":
-                                request.Host = value;
-                                break;
-                            case "accept":
-                                request.Accept = value;
-                                break;
-                            case "keepalive":
-                                request.KeepAlive = true;
-                                break;
-                            case "cookie":
-                                request.CookieContainer.SetCookies(new Uri(url), value);
-                                break;
-                            case "cookiecontainer":
-                                //request.CookieContainer = JsonConvert.DeserializeObject<CookieContainer>(value);
-                                break;
-                            default:
-                                request.Headers.Add(key, value);
-                                break;
-                        }
-                    }
-                }
-                if (!string.IsNullOrEmpty(data))
-                {
-                    byte[] bytes = Encoding.UTF8.GetBytes(data);
-                    request.ContentLength = bytes.Length;
-                    using (Stream s = request.GetRequestStream())
-                    {
-                        s.Write(bytes, 0, bytes.Length);
-                    }
-                }
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                string result;
-                using (StreamReader sr = new StreamReader(response.GetResponseStream()))
-                {
-                    result = sr.ReadToEnd();
-                    //LogHelper.WriteLog("响应：\r" + result, "request");
-                }
-                return result;
-            }
-            catch (Exception ex)
-            {
-                LogHelper.Write(ex);
+            if (string.IsNullOrEmpty(url))
                 return null;
+            if (url.StartsWith("https"))
+                ServicePointManager.ServerCertificateValidationCallback += RemoteCertificateValidationCallback;
+            HttpWebRequest request = System.Net.WebRequest.Create(url) as HttpWebRequest;
+            request.Method = "POST";
+            request.ContentType = "application/json";
+            request.ProtocolVersion = HttpVersion.Version11;
+            request.Timeout = 3 * 60 * 1000;
+            request.CookieContainer = new CookieContainer();
+            if (headers != null)
+            {
+                string value;
+                foreach (string key in headers.Keys)
+                {
+                    value = headers[key];
+                    switch (key.ToLower())
+                    {
+                        case "useragent":
+                            request.UserAgent = value;
+                            break;
+                        case "host":
+                            request.Host = value;
+                            break;
+                        case "accept":
+                            request.Accept = value;
+                            break;
+                        case "keepalive":
+                            request.KeepAlive = true;
+                            break;
+                        case "cookie":
+                            request.CookieContainer.SetCookies(new Uri(url), value);
+                            break;
+                        case "cookiecontainer":
+                            //request.CookieContainer = JsonConvert.DeserializeObject<CookieContainer>(value);
+                            break;
+                        default:
+                            request.Headers.Add(key, value);
+                            break;
+                    }
+                }
             }
+            if (!string.IsNullOrEmpty(json))
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(json);
+                request.ContentLength = bytes.Length;
+                using (Stream s = request.GetRequestStream())
+                {
+                    s.Write(bytes, 0, bytes.Length);
+                }
+            }
+            WebResponse response = request.GetResponse();
+            string result;
+            using (StreamReader sr = new StreamReader(response.GetResponseStream()))
+            {
+                result = sr.ReadToEnd();
+            }
+            return result;
         }
         public static string Get(string url, string data, Dictionary<string, string> headers = null)
         {
-            try
+            if (string.IsNullOrEmpty(url))
+                return null;
+            if (url.StartsWith("https"))
+                ServicePointManager.ServerCertificateValidationCallback += RemoteCertificateValidationCallback;
+            if (!string.IsNullOrEmpty(data))
+                url += string.Format("?{0}", data);
+            HttpWebRequest request = HttpWebRequest.Create(url) as HttpWebRequest;
+            request.Method = "Get";
+            request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8;";
+            request.ProtocolVersion = HttpVersion.Version11;
+            request.Timeout = 3 * 60 * 1000;
+            if (headers != null)
             {
-                if (string.IsNullOrEmpty(url))
-                    return null;
-                if (url.StartsWith("https"))
-                    ServicePointManager.ServerCertificateValidationCallback += (sender, certifice, chain, sslerror) => { return true; };
-                if (!string.IsNullOrEmpty(data))
-                    url += string.Format("?{0}", data);
-                LogHelper.Write("url：\r" + url, "request");
-                HttpWebRequest request = HttpWebRequest.Create(url) as HttpWebRequest;
-                request.Method = "Get";
-                request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8;";
-                request.ProtocolVersion = HttpVersion.Version11;
-                request.Timeout = 20000;
-                if (headers != null)
+                string value;
+                foreach (string key in headers.Keys)
                 {
-                    string value;
-                    foreach (string key in headers.Keys)
+                    value = headers[key];
+                    switch (key.ToLower())
                     {
-                        value = headers[key];
-                        switch (key.ToLower())
-                        {
-                            case "useragent":
-                                request.UserAgent = value;
-                                break;
-                            case "host":
-                                request.Host = value;
-                                break;
-                            case "accept":
-                                request.Accept = value;
-                                break;
-                            case "keepalive":
-                                request.KeepAlive = true;
-                                break;
-                            case "cookie":
-                                //request.CookieContainer = JsonConvert.DeserializeObject<CookieContainer>(value);
-                                break;
-                            default:
-                                request.Headers.Add(key, value);
-                                break;
-                        }
+                        case "useragent":
+                            request.UserAgent = value;
+                            break;
+                        case "host":
+                            request.Host = value;
+                            break;
+                        case "accept":
+                            request.Accept = value;
+                            break;
+                        case "keepalive":
+                            request.KeepAlive = true;
+                            break;
+                        case "cookie":
+                            //request.CookieContainer = JsonConvert.DeserializeObject<CookieContainer>(value);
+                            break;
+                        default:
+                            request.Headers.Add(key, value);
+                            break;
                     }
                 }
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                string result;
-                using (StreamReader sr = new StreamReader(response.GetResponseStream()))
-                {
-                    result = sr.ReadToEnd();
-                    //LogHelper.WriteLog("响应：\r" + result, "request");
-                }
-                return result;
             }
-            catch (Exception ex)
+            WebResponse response = request.GetResponse();
+            string result;
+            using (StreamReader sr = new StreamReader(response.GetResponseStream()))
             {
-                LogHelper.Write(ex);
-                return null;
+                result = sr.ReadToEnd();
             }
-        }
-        public static HttpWebResponse GetResponse(string url, string data = "")
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(url))
-                    return null;
-                if (url.StartsWith("https"))
-                    ServicePointManager.ServerCertificateValidationCallback += (sender, certifice, chain, sslerror) => { return true; };
-                if (!string.IsNullOrEmpty(data))
-                    url += string.Format("?{0}", data);
-                LogHelper.Write("url：\r" + url, "request");
-                HttpWebRequest request = HttpWebRequest.Create(url) as HttpWebRequest;
-                request.Method = "Get";
-                request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8;";
-                request.ProtocolVersion = HttpVersion.Version11;
-                request.Timeout = 20000;
-                request.CookieContainer = new CookieContainer();
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                return response;
-            }
-            catch (Exception ex)
-            {
-                LogHelper.Write(ex);
-                return null;
-            }
+            return result;
         }
         public static Stream GetImageStream(string url, string data = "")
         {
             if (string.IsNullOrEmpty(url))
                 return null;
             if (url.StartsWith("https"))
-                ServicePointManager.ServerCertificateValidationCallback += (sender, certifice, chain, sslerror) => { return true; };
+                ServicePointManager.ServerCertificateValidationCallback += RemoteCertificateValidationCallback;
             if (!string.IsNullOrEmpty(data))
                 url += string.Format("?{0}", data);
-            LogHelper.Write("url：\r" + url, "request");
-            WebRequest request = WebRequest.Create(url);
-            request.Method = "Get";
-            request.Timeout = 20000;
+            System.Net.WebRequest request = System.Net.WebRequest.Create(url);
+            request.Method = "GET";
+            request.Timeout = 3 * 60 * 1000;
             var response = request.GetResponse();
             return response.GetResponseStream();
         }
-        #endregion
 
 
-        #region 向远程地址post文件以及键值数据
+        #region 向远程地址post多个文件以及键值数据
         /// <summary>
         /// 向远程地址post文件以及键值数据
         /// </summary>
         /// <param name="url">远程url</param>
-        /// <param name="namepath">文件参数名及本地文件物理地址字典</param>
-        /// <param name="param">参数字典</param>
-        public static string PostFile(string url, Dictionary<string, string> namepath, Dictionary<string, string> param)
+        /// <param name="namePathKeyValues">文件参数名及本地文件物理地址字典</param>
+        /// <param name="paramKeyValues">参数字典</param>
+        public static string PostFile(string url, Dictionary<string, string> namePathKeyValues, Dictionary<string, string> paramKeyValues)
         {
             string boundary = "----" + DateTime.Now.Ticks.ToString("x");
-            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+            HttpWebRequest req = System.Net.WebRequest.Create(url) as HttpWebRequest;
             req.ContentType = "multipart/form-data; boundary=" + boundary;
             req.Method = "POST";
             req.KeepAlive = true;
@@ -222,7 +173,7 @@ namespace System
             FileStream fileStream;
             byte[] buffer;
             int bytesRead;
-            foreach (KeyValuePair<string, string> item in namepath)
+            foreach (KeyValuePair<string, string> item in namePathKeyValues)
             {
                 header = string.Format(headerTemplate, item.Key, Path.GetFileName(item.Value));
                 headerbytes = System.Text.Encoding.UTF8.GetBytes(header);
@@ -240,11 +191,11 @@ namespace System
 
             string formdataTemplate = "\r\n--" + boundary + "\r\nContent-Disposition: form-data; name=\"{0}\";\r\n\r\n{1}";
             #region 写入post参数
-            if (param != null)
-                foreach (string key in param.Keys)
+            if (paramKeyValues != null)
+                foreach (string key in paramKeyValues.Keys)
                 {
                     stream.Write(boundarybytes, 0, boundarybytes.Length);
-                    string formitem = string.Format(formdataTemplate, key, param[key]);
+                    string formitem = string.Format(formdataTemplate, key, paramKeyValues[key]);
                     byte[] formitembytes = System.Text.Encoding.UTF8.GetBytes(formitem);
                     stream.Write(formitembytes, 0, formitembytes.Length);
                 }
@@ -273,17 +224,17 @@ namespace System
         }
         #endregion
 
-        #region 向远程地址post文件以及键值数据
+        #region 向远程地址post单个文件以及键值数据
         /// <summary>
         /// 向远程地址post文件以及键值数据
         /// </summary>
         /// <param name="url">远程url</param>
         /// <param name="file">文件</param>
-        /// <param name="param">参数字典</param>
-        public static string PostFile(string url, Stream inputStream, string fileName, Dictionary<string, string> param)
+        /// <param name="paramKeyValues">参数字典</param>
+        public static string PostFile(string url, string fileName, Stream inputStream, Dictionary<string, string> paramKeyValues)
         {
             string boundary = "----" + DateTime.Now.Ticks.ToString("x");
-            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+            HttpWebRequest req = System.Net.WebRequest.Create(url) as HttpWebRequest;
             req.ContentType = "multipart/form-data; boundary=" + boundary;
             req.Method = "POST";
             req.KeepAlive = true;
@@ -313,11 +264,11 @@ namespace System
 
             string formdataTemplate = "\r\n--" + boundary + "\r\nContent-Disposition: form-data; name=\"{0}\";\r\n\r\n{1}";
             #region 写入post参数
-            if (param != null)
-                foreach (string key in param.Keys)
+            if (paramKeyValues != null)
+                foreach (string key in paramKeyValues.Keys)
                 {
                     stream.Write(boundarybytes, 0, boundarybytes.Length);
-                    string formitem = string.Format(formdataTemplate, key, param[key]);
+                    string formitem = string.Format(formdataTemplate, key, paramKeyValues[key]);
                     byte[] formitembytes = System.Text.Encoding.UTF8.GetBytes(formitem);
                     stream.Write(formitembytes, 0, formitembytes.Length);
                 }
@@ -346,14 +297,14 @@ namespace System
         }
         #endregion
 
-        #region 使用HttpClient模拟form表单提交键值和本地文件
-        public static void ClientPostFile(string url, Dictionary<string, string> fileData, Dictionary<string, object> formData)
+        #region 使用HttpClient模拟form表单提交键值和本地多个文件
+        public static void ClientPostFile(string url, Dictionary<string, string> namePathKeyValues, Dictionary<string, object> formDataKeyValues)
         {
             using (MultipartFormDataContent multipartFormDataContent = new MultipartFormDataContent())
             {
-                if (formData != null)
+                if (formDataKeyValues != null)
                 {
-                    foreach (var item in formData)
+                    foreach (var item in formDataKeyValues)
                     {
                         ByteArrayContent byteArrayContent = new ByteArrayContent(Encoding.UTF8.GetBytes(item.Value.ToString()));
                         //byteArrayContent.Headers.ContentType = new MediaTypeHeaderValue("multipart/form-data");
@@ -364,10 +315,10 @@ namespace System
                         multipartFormDataContent.Add(byteArrayContent);
                     }
                 }
-                if (fileData != null)
+                if (namePathKeyValues != null)
                 {
                     FileStream fileStream;
-                    foreach (var item in fileData)
+                    foreach (var item in namePathKeyValues)
                     {
                         fileStream = new FileStream(item.Value.ToString(), FileMode.Open, FileAccess.Read);
                         byte[] bytes;
@@ -387,7 +338,7 @@ namespace System
                     }
                 }
 
-                HttpResponseMessage result = httpClient.PostAsync(url, multipartFormDataContent).Result;
+                HttpResponseMessage result = _httpClient.PostAsync(url, multipartFormDataContent).Result;
             }
         }
         #endregion

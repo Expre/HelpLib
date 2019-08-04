@@ -4,7 +4,7 @@ using System.Text;
 
 namespace System
 {
-    public class DateTimeHelper
+    public class TimeHelper
     {
         public static long GetTicks(DateTime dateTime)
         {
