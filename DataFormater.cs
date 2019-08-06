@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -12,70 +13,42 @@ namespace System
     public class DataFormater
     {
         private static readonly Regex RegCHZN = new Regex("[\u4e00-\u9fa5]");
-
-        #region 基础值类型检查
-        public static bool IsDateTime(string dateTimeString)
+        public static bool CanConvert<DestinationT, SourceT>(SourceT input, out DestinationT destinationObj)
         {
-            return DateTime.TryParse(dateTimeString, out _);
-        }
-        public static bool IsBoolean(object booleanString)
-        {
-            return bool.TryParse(booleanString.ToString(), out _);
-        }
-        public static bool IsEmpty<T>(T scoure) where T : struct
-        {
-            return scoure.Equals(default(T));
-        }
-        public static bool IsByte(string byteString)
-        {
-            return byte.TryParse(byteString, out _);
-        }
-        public static bool IsChar(string charString)
-        {
-            return char.TryParse(charString, out _);
-        }
-        public static bool IsDecimal(string decimalString)
-        {
-            return decimal.TryParse(decimalString, out _);
-        }
-        public static bool IsDouble(string doubleString)
-        {
-            return double.TryParse(doubleString, out _);
-        }
-        public static bool IsEnum<TEnum>(string enumString) where TEnum : struct
-        {
-            return IsEnum<TEnum>(enumString, out _);
-        }
-        public static bool IsEnum<TEnum>(string enumString, out TEnum e) where TEnum : struct
-        {
-            if (!Enum.TryParse(enumString, out e))
+            destinationObj = default;
+            Type sourceType = input.GetType();
+            Type destinationType = typeof(DestinationT);
+            var converter = TypeDescriptor.GetConverter(destinationType);
+            if (converter == null)
                 return false;
-            if (!Enum.IsDefined(typeof(TEnum), e))
+            if (!converter.CanConvertFrom(sourceType))
                 return false;
+            destinationObj = (DestinationT)converter.ConvertFrom(input);
             return true;
         }
-        public static bool IsFloat(string floatString)
+        public static DestinationT Convert<DestinationT, SourceT>(SourceT input)
         {
-            return float.TryParse(floatString, out _);
+            if (!CanConvert(input, out DestinationT destinationT))
+                return default;
+            return destinationT;
         }
-        public static bool IsInt(string intString)
+        public static bool CanConvert<T>(string input, out T obj)
         {
-            return int.TryParse(intString, out _);
+            obj = default;
+            var converter = TypeDescriptor.GetConverter(typeof(T));
+            if (converter == null)
+                return false;
+            if (!converter.CanConvertFrom(typeof(string)))
+                return false;
+            obj = (T)converter.ConvertFromString(input);
+            return true;
         }
-        public static bool IsLong(string longString)
+        public static T Convert<T>(string input)
         {
-            return long.TryParse(longString, out _);
+            if (!CanConvert<T>(input, out T obj))
+                return default;
+            return obj;
         }
-        public static bool IsSByte(string sbyteString)
-        {
-            return sbyte.TryParse(sbyteString, out _);
-        }
-        public static bool IsShort(string shortString)
-        {
-            return short.TryParse(shortString, out _);
-        }
-        #endregion
-        #region 引用类型检查
         public static bool IsNullOrEmpty<TSource>(IEnumerable<TSource> source)
         {
             if (source != null && source.Count() > 0)
@@ -88,8 +61,12 @@ namespace System
                 return false;
             return true;
         }
-        #endregion
-        #region 常用数据检查
+        public static bool IsEmpty<TSource>(TSource source) where TSource : struct
+        {
+            bool result = source.Equals(default(TSource));
+            return result;
+        }
+
         public static bool IsMobile(string mobile)
         {
             //string patt = @"^13[0-9]{9}|15[012356789][0-9]{8}|18[0-9][0-9]{8}|14[57][0-9]{8}$|^17[0135678][0-9]{8}$";
@@ -102,18 +79,6 @@ namespace System
                 return false;
             return true;
         }
-        public static string GetIDNO(object val)
-        {
-            if (val == null || val == DBNull.Value)
-            {
-                return "";
-            }
-            if (!IsIDNO(val.ToString()))
-            {
-                return "";
-            }
-            return val.ToString().ToUpper();
-        }
         public static bool IsIDNO(string val, out DateTime birthday, out string sex)
         {
             birthday = DateTime.MinValue;
@@ -124,7 +89,7 @@ namespace System
             Match match;
             string datestr;
             bool convert;
-            int sexint = 0;
+            int sexInt = 0;
             if (!re.IsMatch(val))
             {
                 return false;
@@ -139,7 +104,7 @@ namespace System
                 convert = DateTime.TryParse(datestr, out birthday);
                 if (!convert)
                     return false;
-                sexint = int.Parse(val.Substring(13, 1));
+                sexInt = int.Parse(val.Substring(13, 1));
             }
 
             if (val.Length == 18)
@@ -153,19 +118,19 @@ namespace System
                     return false;
                 int[] arrInt = new int[] { 7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2 };
                 string[] arrCh = new string[] { "1", "0", "X", "9", "8", "7", "6", "5", "4", "3", "2" };
-                int nTemp = 0;
+                int index = 0;
                 for (int i = 0; i < 17; i++)
                 {
-                    nTemp += int.Parse(val.Substring(i, 1)) * arrInt[i];
+                    index += int.Parse(val.Substring(i, 1)) * arrInt[i];
                 }
-                string valnum = arrCh[nTemp % 11];
+                string valnum = arrCh[index % 11];
                 if (valnum != val.Substring(17, 1))
                 {
                     return false;
                 }
-                sexint = int.Parse(val.Substring(16, 1));
+                sexInt = int.Parse(val.Substring(16, 1));
             }
-            sex = sexint % 2 == 0 ? "女" : "男";
+            sex = sexInt % 2 == 0 ? "女" : "男";
             return true;
         }
         public static bool IsIDNO(string val)
@@ -233,91 +198,11 @@ namespace System
         {
             return Regex.IsMatch(url, @"^(http|https|ftp)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&%\$#\=~])*[^\.\,\)\(\s]$");
         }
-        public static bool IsBase64String(string str)
-        {
-            return Regex.IsMatch(str, @"[A-Za-z0-9\+\/\=]");
-        }
-        #endregion
-        #region 不同类型的值获取
-        public static DateTime GetDateTime(string dateTime)
-        {
-            if (string.IsNullOrEmpty(dateTime))
-                return DateTime.MinValue;
-            if (IsDateTime(dateTime))
-                return DateTime.Parse(dateTime);
-            return DateTime.MinValue;
-        }
-        public static Guid GetGuid(object val)
-        {
-            if (val == null || val == DBNull.Value)
-                return Guid.Empty;
-            if (!Guid.TryParse(val.ToString(), out Guid gid))
-                return Guid.Empty;
-            else
-                return gid;
-        }
-        public static int GetInt(object val, int defaultValue)
-        {
-            if (val.IsNull() || !IsInt(val.ToString()))
-                return defaultValue;
-            return int.Parse(val.ToString());
-        }
-        public static int GetInt(object val)
-        {
-            return GetInt(val, 0);
-        }
-        public static int GetInt(object val, int min, int max)
-        {
-            int result = GetInt(val, 0);
-            if (result < min)
-                return min;
-            if (result > max)
-                return max;
-            return result;
-        }
-
-        public static long GetLong(object val, int defaultValue)
-        {
-            if (val.IsNull() || !IsLong(val.ToString()))
-                return defaultValue;
-            return long.Parse(val.ToString());
-        }
-        public static long GetLong(object val)
-        {
-            return GetLong(val, 0);
-        }
-
-        public static bool GetBoolean(object val)
-        {
-            if (val.IsNull())
-                return false;
-            if (!IsBoolean(val.ToString()))
-                return false;
-            if (IsBoolean(val))
-                return bool.Parse(val.ToString());
-            return false;
-        }
-
-        #endregion
         #region 字符串操作
-        public static bool CheckString(string val, int min, int max)
+        public static string GetSafeString(string val, string defaultval = "")
         {
-            val = val.Trim();
-            if (val.Length < min || val.Length > max)
-                return false;
-            else
-                return true;
-        }
-        public static string GetSafeString(object val)
-        {
-            return GetSafeString(val, "");
-        }
-        public static string GetSafeString(object val, string defaultval)
-        {
-            if (val == null || val == DBNull.Value)
-            {
+            if (val.IsNullOrEmpty())
                 return defaultval;
-            }
             string result = val.ToString().Trim().Replace("'", "''");
             string word = @"exec|insert|select|delete|update|master|truncate|char|declare|join|iframe|href|script|<|>|request";
             if (Regex.IsMatch(result, word))
@@ -328,14 +213,82 @@ namespace System
             return result;
         }
         #endregion
+
+        /// <summary>
+        /// 转全角(SBC case)
+        /// </summary>
+        /// <param name="input">要转换的字符串</param>
+        /// <returns></returns>
+        public static string ToSBC(string input)
+        {
+            char[] c = input.ToCharArray();
+            for (int i = 0; i < c.Length; i++)
+            {
+                if (c[i] == 32)
+                {
+                    c[i] = (char)12288;
+                    continue;
+                }
+                if (c[i] < 127)
+                    c[i] = (char)(c[i] + 65248);
+            }
+            return new string(c);
+        }
+
+        /// <summary>
+        ///  转半角(DBC case)
+        /// </summary>
+        /// <param name="input">要转换的字符串</param>
+        /// <returns></returns>
+        public static string ToDBC(string input)
+        {
+            char[] c = input.ToCharArray();
+            for (int i = 0; i < c.Length; i++)
+            {
+                if (c[i] == 12288)
+                {
+                    c[i] = (char)32;
+                    continue;
+                }
+                if (c[i] > 65280 && c[i] < 65375)
+                    c[i] = (char)(c[i] - 65248);
+            }
+            return new string(c);
+        }
+        /// <summary>
+        /// 获取html中的文字
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static string HtmlToText(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return "";
+            string result = new Text.RegularExpressions.Regex("</?.+?>").Replace(input, "");
+            return result;
+        }
+        public static string GetLatters()
+        {
+            StringBuilder latters = new StringBuilder();
+            for (char i = 'a'; i <= 'z'; i++)
+            {
+                latters.Append(i);
+            }
+            return latters.ToString();
+        }
         #region 字符串脱敏
         public static string Desensitized(string scoureStr, DesensitizedType desensitizedType)
         {
+            if (scoureStr.IsNullOrEmpty())
+                return string.Empty;
             string finallyDesensitized;
             switch (desensitizedType)
             {
-                case DesensitizedType.未知:
-                    finallyDesensitized = scoureStr;
+                case DesensitizedType.默认:
+                    if (scoureStr.Length > 2)
+                        finallyDesensitized = scoureStr.Substring(0, 1) + "****" + scoureStr.Substring(scoureStr.Length - 2, 1);
+                    else
+                        finallyDesensitized = scoureStr.Substring(0, 1) + "****";
                     break;
                 case DesensitizedType.手机号:
                     finallyDesensitized = scoureStr.Substring(0, 3) + "****" + scoureStr.Substring(7, 4);
@@ -351,59 +304,12 @@ namespace System
         }
         public enum DesensitizedType
         {
-            未知 = 0,
+            默认 = 0,
             手机号 = 1,
             银行卡号 = 2,
         }
         #endregion
-        #region 对私有字段和属性值的设置及获取、私有方法的执行
-        //1、得到私有字段的值
-        public static T GetPrivateField<T>(object instance, string fieldname)
-        {
-            BindingFlags flag = BindingFlags.Instance | BindingFlags.NonPublic;
-            Type type = instance.GetType();
-            FieldInfo field = type.GetField(fieldname, flag);
-            return (T)field.GetValue(instance);
-        }
-
-        //2、得到私有属性的值：
-        public static T GetPrivateProperty<T>(object instance, string propertyname)
-        {
-            BindingFlags flag = BindingFlags.Instance | BindingFlags.NonPublic;
-            Type type = instance.GetType();
-            PropertyInfo field = type.GetProperty(propertyname, flag);
-            return (T)field.GetValue(instance, null);
-        }
-
-        //3、设置私有字段的值：
-        public static void SetPrivateField(object instance, string fieldname, object value)
-        {
-            BindingFlags flag = BindingFlags.Instance | BindingFlags.NonPublic;
-            Type type = instance.GetType();
-            FieldInfo field = type.GetField(fieldname, flag);
-            field.SetValue(instance, value);
-        }
-
-        //4、设置私有属性的值： 
-        public static void SetPrivateProperty(object instance, string propertyname, object value)
-        {
-            BindingFlags flag = BindingFlags.Instance | BindingFlags.NonPublic;
-            Type type = instance.GetType();
-            PropertyInfo field = type.GetProperty(propertyname, flag);
-            field.SetValue(instance, value, null);
-        }
-
-        //5、调用私有方法：
-        public static T InvokePrivateMethod<T>(object instance, string name, params object[] param)
-        {
-            BindingFlags flag = BindingFlags.Instance | BindingFlags.NonPublic;
-            Type type = instance.GetType();
-            MethodInfo method = type.GetMethod(name, flag);
-            return (T)method.Invoke(instance, param);
-        }
-        #endregion
         #region 首字母转大小写
-
         /// <summary>
         /// 首字母小写写
         /// </summary>
@@ -430,17 +336,5 @@ namespace System
             return str;
         }
         #endregion
-        public T GetValue<T>(object value)
-        {
-            try
-            {
-                T result = (T)Convert.ChangeType(value, typeof(T));
-                return result;
-            }
-            catch (Exception)
-            {
-                return default;
-            }
-        }
     }
 }

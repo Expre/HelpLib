@@ -10,27 +10,21 @@ namespace System
 {
     public class CustomerCache : ICache
     {
-        private static readonly ConcurrentDictionary<string, KeyValuePair<DateTime, object>> _CustomerCacheDictionary = new ConcurrentDictionary<string, KeyValuePair<DateTime, object>>();
-        private static readonly List<string> _ExpiredKey = new List<string>();
+        private static readonly ConcurrentDictionary<string, KeyValuePair<DateTime, object>> CustomerCacheDictionary = new ConcurrentDictionary<string, KeyValuePair<DateTime, object>>();
         static CustomerCache()
         {
             Task.Factory.StartNew(() =>
             {
                 while (true)
                 {
-                    if (_CustomerCacheDictionary.Count < 1)
+                    if (CustomerCacheDictionary.Count < 1)
                         continue;
-                    _ExpiredKey.RemoveRange(0, _ExpiredKey.Count);
-                    foreach (var item in _CustomerCacheDictionary)
+                    foreach (var item in CustomerCacheDictionary)
                     {
-                        if (DateTime.Now > item.Value.Key)//过期了
-                        {
-                            _ExpiredKey.Add(item.Key);
-                        }
-                    }
-                    foreach (var key in _ExpiredKey)
-                    {
-                        _CustomerCacheDictionary.TryRemove(key, out _);
+                        if (DateTime.Now < item.Value.Key)//没过期
+                            continue;
+                        //过期key
+                        CustomerCacheDictionary.TryRemove(item.Key, out _);
                     }
                     Thread.Sleep(1000 * 60);
                 }
@@ -42,8 +36,8 @@ namespace System
             get => Get<object>(key);
             set { Add(key, value); }
         }
-        public int Count => _CustomerCacheDictionary.Count;
-        public List<string> Keys => _CustomerCacheDictionary.Keys.ToList();
+        public int Count => CustomerCacheDictionary.Count;
+        public List<string> Keys => CustomerCacheDictionary.Keys.ToList();
         /// <summary>
         /// 添加缓存
         /// </summary>
@@ -52,9 +46,9 @@ namespace System
         /// <param name="cacheMinutes">缓存时间，默认30分钟</param>
         public void Add(string key, object data, double cacheMinutes = 30)
         {
-            if (_CustomerCacheDictionary.ContainsKey(key))
-                _CustomerCacheDictionary.TryRemove(key, out _);
-            _CustomerCacheDictionary.TryAdd(key, new KeyValuePair<DateTime, object>(DateTime.Now.AddMinutes(cacheMinutes), data));
+            if (CustomerCacheDictionary.ContainsKey(key))
+                CustomerCacheDictionary.TryRemove(key, out _);
+            CustomerCacheDictionary.TryAdd(key, new KeyValuePair<DateTime, object>(DateTime.Now.AddMinutes(cacheMinutes), data));
         }
 
         /// <summary>
@@ -65,14 +59,16 @@ namespace System
         /// <returns></returns>
         public T Get<T>(string key)
         {
-            if (!_CustomerCacheDictionary.ContainsKey(key))
+            if (!CustomerCacheDictionary.ContainsKey(key))
                 return default;
-            var tryResult = _CustomerCacheDictionary.TryGetValue(key, out KeyValuePair<DateTime, object> keyValuePair);
+            var tryResult = CustomerCacheDictionary.TryGetValue(key, out KeyValuePair<DateTime, object> keyValuePair);
             if (!tryResult)
                 return default;
-            if (DateTime.Now < keyValuePair.Key)
+            if (DateTime.Now > keyValuePair.Key)
+                return default;
+            if (keyValuePair.Value is T)
                 return (T)keyValuePair.Value;
-            _CustomerCacheDictionary.TryRemove(key, out _);
+            CustomerCacheDictionary.TryRemove(key, out _);
             return default;
         }
         public T Get<T>(string key, Func<T> acquire, double cacheMinutes = 30)
@@ -90,25 +86,25 @@ namespace System
         /// <returns></returns>
         public bool Contains(string key)
         {
-            if (!_CustomerCacheDictionary.ContainsKey(key))
+            if (!CustomerCacheDictionary.ContainsKey(key))
                 return false;
-            KeyValuePair<DateTime, object> keyValuePair = _CustomerCacheDictionary[key];
+            KeyValuePair<DateTime, object> keyValuePair = CustomerCacheDictionary[key];
             if (DateTime.Now < keyValuePair.Key)
                 return true;
-            _CustomerCacheDictionary.TryRemove(key, out _);
+            CustomerCacheDictionary.TryRemove(key, out _);
             return false;
         }
 
 
         public void Remove(string key)
         {
-            if (_CustomerCacheDictionary.ContainsKey(key))
-                _CustomerCacheDictionary.TryRemove(key, out _);
+            if (CustomerCacheDictionary.ContainsKey(key))
+                CustomerCacheDictionary.TryRemove(key, out _);
         }
 
         public void RemoveAll()
         {
-            _CustomerCacheDictionary.Clear();
+            CustomerCacheDictionary.Clear();
             //List<string> keys = new List<string>();
             //foreach (var item in _CustomerCacheDictionary)
             //{

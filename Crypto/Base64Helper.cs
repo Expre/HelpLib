@@ -15,6 +15,8 @@ namespace HelpLib.Crypto
         }
         public static string Decrypt(string base64String)
         {
+            if (!IsBase64String(base64String))
+                return string.Empty;
             byte[] bytes = Convert.FromBase64String(base64String);
             string result = Encoding.UTF8.GetString(bytes);
             return result;
@@ -23,6 +25,12 @@ namespace HelpLib.Crypto
         {
             string base64 = Convert.ToBase64String(StreamHelper.GetBytes(scoureStream));
             return base64;
+        }
+        public static bool IsBase64String(string base64String)
+        {
+            Span<byte> bytes = new Span<byte>();
+            bool result = Convert.TryFromBase64String(base64String, bytes, out int bytesWritten);
+            return result;
         }
     }
 }
