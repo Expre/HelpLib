@@ -33,9 +33,11 @@ namespace System
                 if (!File.Exists(filePath))
                 {
                     FileInfo file = new FileInfo(filePath);
-                    FileStream fs = file.Create();
-                    fs.Write(buffer, 0, buffer.Length);
-                    fs.Close();
+                    using (FileStream fs = file.Create())
+                    {
+                        fs.Write(buffer, 0, buffer.Length);
+                        fs.Close();
+                    }
                 }
             }
             catch (Exception ex)

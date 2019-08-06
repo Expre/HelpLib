@@ -7,7 +7,7 @@ namespace System
 {
     public class RandomHelper
     {
-        private static Dictionary<char, int> letterNumbers = new Dictionary<char, int>();
+        private static readonly Dictionary<char, int> letterNumbers = new Dictionary<char, int>();
         static RandomHelper()
         {
             for (char i = 'a'; i <= 'z'; i++)
