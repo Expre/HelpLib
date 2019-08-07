@@ -24,6 +24,8 @@ namespace System
                 propertyInfo = tin.GetProperty(item.Name, flag);
                 if (propertyInfo == null)
                     continue;
+                if (!propertyInfo.CanWrite)
+                    continue;
                 property = Expression.Property(parameterExpression, propertyInfo);
                 memberBinding = Expression.Bind(item, property);
                 memberBindingList.Add(memberBinding);
