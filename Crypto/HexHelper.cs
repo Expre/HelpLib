@@ -26,10 +26,15 @@ namespace HelpLib.Crypto
             }
             return str.ToString();
         }
-        public static string AddBetweenHex(string x, string y)
+        public static string AddBetweenHex(string hexX, string hexY)
         {
-            int intSum = Convert.ToInt32(x, 16) + Convert.ToInt32(y, 16);
-            return Convert.ToString(intSum, 16);
+            int intSum = Convert.ToInt32(hexX, 16) + Convert.ToInt32(hexY, 16);
+            return Convert.ToString(intSum, 16).ToUpper();
+        }
+        public static string MultBetweenHex(string hexX, string hexY)
+        {
+            int intMult = Convert.ToInt32(hexX, 16) * Convert.ToInt32(hexY, 16);
+            return Convert.ToString(intMult, 16).ToUpper();
         }
         public static string GetHex(string str)
         {

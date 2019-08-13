@@ -6,6 +6,10 @@
     <ApplicationIcon></ApplicationIcon>
     <OutputType>Exe</OutputType>
     <StartupObject />
+    <SignAssembly>false</SignAssembly>
+    <AssemblyVersion>1.0.7.0</AssemblyVersion>
+    <Version>1.0.7</Version>
+    <Authors>sunzhimin</Authors>
   </PropertyGroup>
 
   <ItemGroup>
