@@ -1,4 +1,4 @@
-# HelpLib日常开发帮助类库使用文档
+# HelpLib日常开发帮助类库使用文档（持续更新中）
 # Crypto
 
  1. MD5Helper：计算 MD5 哈希值
@@ -20,4 +20,4 @@
  3. `GetImageStream`：获取远程地址的图片流；
  4. `PostFile`：向远程地址post多个文件以及键值数据；
  5. `PostFile`：向远程地址post单个文件以及键值数据；
- 6.  `ClientPostFile`：使用HttpClient模拟form表单提交键值和本地多个文件；
+ 6. `ClientPostFile`：使用HttpClient模拟form表单提交键值和本地多个文件；
