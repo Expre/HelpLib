@@ -8,6 +8,7 @@ namespace HelpLib.Crypto
     {
         public static byte[] HexStringToBytes(string hexValues)
         {
+            hexValues = hexValues.Replace("-", string.Empty).Replace(" ", string.Empty);
             byte[] buff = new byte[hexValues.Length / 2];
             for (int i = 0; i < buff.Length; i++)
             {
@@ -35,6 +36,18 @@ namespace HelpLib.Crypto
         {
             int intMult = Convert.ToInt32(hexX, 16) * Convert.ToInt32(hexY, 16);
             return Convert.ToString(intMult, 16).ToUpper();
+        }
+        /// <summary>
+        /// 高低位数据转换
+        /// </summary>
+        /// <param name="bigEndianOrLittleEndian">高位或低位在前数据</param>
+        /// <returns></returns>
+        public static string GetReverse(string bigEndianOrLittleEndian)
+        {
+            byte[] bytes = HexStringToBytes(bigEndianOrLittleEndian);
+            Array.Reverse(bytes);
+            string hexValues = BytesToHexString(bytes);
+            return hexValues;
         }
         public static string GetHex(string str)
         {

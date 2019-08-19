@@ -10,8 +10,8 @@ namespace HelpLib.Crypto
     {
         public static string Decrypt(string base64Data, string key)
         {
-            Byte[] encryptedBytes = Convert.FromBase64String(base64Data);
-            Byte[] bytes = Decrypt(encryptedBytes, key);
+            byte[] encryptedBytes = Convert.FromBase64String(base64Data);
+            byte[] bytes = Decrypt(encryptedBytes, key);
             if (bytes == null)
             {
                 return null;
@@ -27,8 +27,8 @@ namespace HelpLib.Crypto
         /// <returns>加密完成的字节数组</returns>  
         public static byte[] Decrypt(byte[] data, string key)
         {
-            Byte[] encryptedBytes = data;
-            Byte[] bKey = new Byte[24];
+            byte[] encryptedBytes = data;
+            byte[] bKey = new byte[24];
             Array.Copy(Encoding.UTF8.GetBytes(key.PadRight(bKey.Length)), bKey, bKey.Length);
 
             using (MemoryStream Memory = new MemoryStream(encryptedBytes))
@@ -77,8 +77,8 @@ namespace HelpLib.Crypto
             {
                 using (TripleDES des = TripleDES.Create())
                 {
-                    Byte[] plainBytes = data;
-                    Byte[] bKey = new Byte[24];
+                    byte[] plainBytes = data;
+                    byte[] bKey = new byte[24];
                     Array.Copy(Encoding.UTF8.GetBytes(key.PadRight(bKey.Length)), bKey, bKey.Length);
 
                     des.Mode = CipherMode.ECB;
