@@ -39,7 +39,7 @@ namespace System
         {
             lock (this)
             {
-                long timestamp = TimeGen();
+                long timestamp = GetTimeStamp();
                 if (this.lastTimestamp == timestamp)
                 { //同一微妙中生成ID
                     sequence = (sequence + 1) & sequenceMask; //用&运算计算该微秒内产生的计数是否已经到达上限
@@ -71,10 +71,10 @@ namespace System
         /// <returns></returns>
         private long TillNextMillis(long lastTimestamp)
         {
-            long timestamp = TimeGen();
+            long timestamp = GetTimeStamp();
             while (timestamp <= lastTimestamp)
             {
-                timestamp = TimeGen();
+                timestamp = GetTimeStamp();
             }
             return timestamp;
         }
@@ -83,7 +83,7 @@ namespace System
         /// 生成当前时间戳
         /// </summary>
         /// <returns></returns>
-        private long TimeGen()
+        private long GetTimeStamp()
         {
             return (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
         }

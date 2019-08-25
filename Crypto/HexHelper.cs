@@ -27,12 +27,12 @@ namespace HelpLib.Crypto
             }
             return str.ToString();
         }
-        public static string AddBetweenHex(string hexX, string hexY)
+        public static string Add(string hexX, string hexY)
         {
             int intSum = Convert.ToInt32(hexX, 16) + Convert.ToInt32(hexY, 16);
             return Convert.ToString(intSum, 16).ToUpper();
         }
-        public static string MultBetweenHex(string hexX, string hexY)
+        public static string Mult(string hexX, string hexY)
         {
             int intMult = Convert.ToInt32(hexX, 16) * Convert.ToInt32(hexY, 16);
             return Convert.ToString(intMult, 16).ToUpper();
@@ -48,19 +48,6 @@ namespace HelpLib.Crypto
             Array.Reverse(bytes);
             string hexValues = BytesToHexString(bytes);
             return hexValues;
-        }
-        public static string GetHex(string str)
-        {
-            char[] values = str.ToCharArray();
-            StringBuilder result = new StringBuilder();
-            foreach (char letter in values)
-            {
-                // Get the integral value of the character.
-                int value = Convert.ToInt32(letter);
-                // Convert the integer value to a hexadecimal value in string form.
-                result.Append($"{value:X}");
-            }
-            return result.ToString();
         }
     }
 }
